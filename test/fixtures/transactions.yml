@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  ticker: MyString
+  buy_action: false
+  num_shares: 1
+  price_per_share: 1.5
+  portfolio: one
+
+two:
+  ticker: MyString
+  buy_action: false
+  num_shares: 1
+  price_per_share: 1.5
+  portfolio: two
