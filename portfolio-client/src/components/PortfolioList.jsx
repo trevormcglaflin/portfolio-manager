@@ -12,7 +12,6 @@ function PortfolioList() {
       try {
         const data = await fetchAllPortfolios();
         setPortfolios(data);
-        console.log(data);
         setLoading(false);
       } catch (e) {
         setError(e);
@@ -30,7 +29,7 @@ function PortfolioList() {
           <h3>Portfolios</h3>
         </div>
         <div className="col col-2">
-          <Link to={`/portfolios/new`}>Create New Portfolio</Link>
+          <Link to={`/portfolios/new`} className="btn btn-primary">Create New Portfolio</Link>
         </div>
       </div>
       <div className="row">
@@ -49,7 +48,7 @@ function PortfolioList() {
                   <td>{portfolio.name}</td>
                   <td>{portfolio.cash_basis}</td>
                   <td>
-                    <Link to={`portfolios/${portfolio.id}`} className="portfolio-name">
+                    <Link to={`portfolios/${portfolio.id}`} className="portfolio-name btn btn-secondary">
                       View
                     </Link>
                   </td>

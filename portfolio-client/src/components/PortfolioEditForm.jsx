@@ -1,5 +1,5 @@
 import {useState, useEffect} from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { fetchPortfolio, updatePortfolio } from "../services/portfolioService";
 
 function PortfolioEditForm() {
@@ -36,6 +36,7 @@ function PortfolioEditForm() {
       await updatePortfolio(id, updatedPortfolio);
       navigate(`/portfolios/${id}`);
     } catch (e) {
+      alert(e);
       console.error('Could not update portfolio: ', e);
     }
   }
@@ -67,6 +68,7 @@ function PortfolioEditForm() {
           />
         </div>
         <div style={{ paddingTop: "15px" }}>
+          <Link to={`../portfolios/${portfolio.id}`} className="portfolio-name btn btn-link">Back to Portfolio</Link>
           <button className="btn btn-primary" type="submit">Update</button>
         </div>
       </form>

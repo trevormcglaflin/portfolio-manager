@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { createTransaction } from "../services/transactionService";
 
 function NewTransactionForm() {
@@ -8,7 +8,6 @@ function NewTransactionForm() {
   const [numShares, setNumShares] = useState(0);
   const [pricePerShare, setPricePerShare] = useState(0);
 
-  // TODO: need to grab the portfolio id from the url params
   const { portfolioId } = useParams();
   
   const navigate = useNavigate();
@@ -65,10 +64,10 @@ function NewTransactionForm() {
         </div>
        
         <div style={{ paddingTop: "15px" }}>
-          <button className="btn btn-primary" type="submit">Create Portfolio</button>
+          <Link to={`../portfolios/${portfolioId}`} className="portfolio-name btn btn-link">Back to Portfolio</Link>
+          <button className="btn btn-primary" type="submit">Create Transaction</button>
         </div>
       </form>
-
     </div>
   )
 

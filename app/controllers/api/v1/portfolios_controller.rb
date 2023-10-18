@@ -32,6 +32,12 @@ class Api::V1::PortfoliosController < ApplicationController
 
   # PATCH/PUT /portfolios/1
   def update
+    available_cash = @portfolio.get_liquid_cash_balance
+    if (@portfolio.cash_basis.to_f - portfolio_params["cash_basis"].to_f) > available_cash.to_f
+      render json: { error: 'Not enough liquid cash to get rid of'}, status: :bad_request
+      return
+    end
+
     if @portfolio.update(portfolio_params)
       render json: @portfolio
     else
