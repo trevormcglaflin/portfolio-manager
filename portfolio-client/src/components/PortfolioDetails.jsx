@@ -1,13 +1,15 @@
 import {useEffect, useState} from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { Line } from 'react-chartjs-2';
+import { PieChart, Pie, Cell, Tooltip  } from 'recharts';
+import { useParams, useNavigate } from "react-router-dom";
 import { fetchPortfolio, deletePortfolio, fetchPortfolioRows } from "../services/portfolioService";
 
 function PortfolioDetails() {
   const [portfolio, setPortfolio] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [portfolioRows, setPortfolioRows] = useState([]);
-  const [showPortfolio, setShowPortfolio] = useState(true);
-  const [showTransactions, setShowTransactions] = useState(false);
+  const [portfolioPieChartData, setPortfolioPieChartData] = useState([]);
+  const [tab, setTab] = useState('portfolio');
 
 
   const { id } = useParams();
@@ -37,6 +39,23 @@ function PortfolioDetails() {
     fetchCurrentPortfolioRows();
   }, [id])
 
+  useEffect(() => {
+    if (portfolioRows.length) {
+      const tempPortfolioPieChartData = [];
+      const totalEquities = portfolioRows[portfolioRows.length-3]['market_value']
+      portfolioRows.forEach((portfolioRow) => {
+        // TODO: clean this up
+        if (!portfolioRow['ticker'].includes('Total') && !portfolioRow['ticker'].includes('Available Cash')) {
+          tempPortfolioPieChartData.push({
+            name: portfolioRow['ticker'],
+            value: Number(((portfolioRow['market_value'] / totalEquities) * 100).toFixed(2))
+          })
+        }
+      })
+      setPortfolioPieChartData(tempPortfolioPieChartData);
+    } 
+  }, [portfolioRows])
+
   const refreshPortfolioRows = async () => {
     try {
       const json = await fetchPortfolioRows(id);
@@ -58,13 +77,15 @@ function PortfolioDetails() {
   }
 
   const showTransactionClick = () => {
-    setShowTransactions(true);
-    setShowPortfolio(false);
+    setTab('transactions');
   }
 
   const showPortfolioClick = () => {
-    setShowTransactions(false);
-    setShowPortfolio(true);
+    setTab('portfolio')
+  }
+
+  const showAllocationsClick = () => {
+    setTab('allocations')
   }
 
   const formatNum = (num) => {
@@ -93,6 +114,16 @@ function PortfolioDetails() {
     const seconds = String(date.getSeconds()).padStart(2, "0");
     return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
   }
+  
+  const getRandomColor = () => `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+
+  function renderCustomToolTip({active, label, payload}) {
+    return(
+      <div>
+        <p>hello </p>
+      </div>
+    );
+  }
 
   if (!portfolio) return <h2>Loading...</h2>;
 
@@ -107,6 +138,9 @@ function PortfolioDetails() {
             </li>
             <li className="nav-item active" style={{ cursor: "pointer" }}>
               <p className="nav-link" onClick={showTransactionClick} style={{ marginBottom: "0px" }}>Transaction Log</p>
+            </li>
+            <li className="nav-item active" style={{ cursor: "pointer" }}>
+              <p className="nav-link" onClick={showAllocationsClick} style={{ marginBottom: "0px" }}>Allocations</p>
             </li>
             <li className="nav-item active" style={{ cursor: "pointer" }}>
               <a className="nav-link" href={`/portfolios/${portfolio.id}/transactions/new`} style={{ marginBottom: "0px" }}>Add Transaction</a>
@@ -125,7 +159,7 @@ function PortfolioDetails() {
         </div>
       </nav>
       <div className="container" style={{ margin: "12px" }}>
-        {showPortfolio ? (
+        {tab === 'portfolio' ? (
           <>
             <div className="row">
               <div className="col col-10">
@@ -171,43 +205,75 @@ function PortfolioDetails() {
           </>
         ) : (
           <>
-            <div className="row">
-              <div className="col col-12">
-                <h4>Transactions</h4>
-              </div>
-            </div>
-            <div className="row">
-              <div className="col col-12">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Ticker</th>
-                      <th>Buy Action</th>
-                      <th>Num Shares</th>
-                      <th>Price per Share</th>
-                      <th>Total Price</th>
-                      <th>Datetime</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transactions.map((transaction) => (
-                      <tr key={transaction.id}>
-                        <td>{transaction.ticker}</td>
-                        <td style={{ color: transaction.buy_action ? 'green' : 'red' }}>{transaction.buy_action ? 'Buy' : 'Sell'}</td>
-                        <td>{transaction.num_shares}</td>
-                        <td>{formatNum(transaction.price_per_share)}</td>
-                        <td>{formatNum(transaction.num_shares * transaction.price_per_share)}</td>
-                        <td>{formattedDate(transaction.created_at)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            {tab === 'transactions' ? (
+              <>
+                <div className="row">
+                  <div className="col col-12">
+                    <h4>Transactions</h4>
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col col-12">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Ticker</th>
+                          <th>Buy Action</th>
+                          <th>Num Shares</th>
+                          <th>Price per Share</th>
+                          <th>Total Price</th>
+                          <th>Datetime</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {transactions.map((transaction) => (
+                          <tr key={transaction.id}>
+                            <td>{transaction.ticker}</td>
+                            <td style={{ color: transaction.buy_action ? 'green' : 'red' }}>{transaction.buy_action ? 'Buy' : 'Sell'}</td>
+                            <td>{transaction.num_shares}</td>
+                            <td>{formatNum(transaction.price_per_share)}</td>
+                            <td>{formatNum(transaction.num_shares * transaction.price_per_share)}</td>
+                            <td>{formattedDate(transaction.created_at)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            ): (
+              <>
+                <div className="row">
+                  <div className="col col-12">
+                    <h4>Allocations</h4>
+                  </div>
+                  <div className="col col-12">
+                    <PieChart width={400} height={400}>
+                      <Pie
+                        data={portfolioPieChartData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                      >
+                        {portfolioPieChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={getRandomColor()} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        cursor={false}
+                        formatter={(value, name) => [value, name]}
+                      />
+                    </PieChart>
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
-        </div>
-      </>
+      </div>
+    </>
   )
 }
 
