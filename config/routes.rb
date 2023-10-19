@@ -6,6 +6,7 @@ Rails.application.routes.draw do
       resources :portfolios do
         member do
           get 'get_portfolio_rows'
+          get 'get_chart_data'
         end
       end
       resources :transactions

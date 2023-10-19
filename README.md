@@ -1,24 +1,5 @@
 # README
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Demo: https://drive.google.com/file/d/15sfNoT5cQsPPHsOGdaSHg80pAgrPSwY8/view?usp=sharing
 
-Things you may want to cover:
-
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+This is a React + Ruby on Rails mock stock portfolio app

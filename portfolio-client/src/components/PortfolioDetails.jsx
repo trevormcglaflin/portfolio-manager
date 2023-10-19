@@ -1,14 +1,21 @@
 import {useEffect, useState} from "react";
-import { Line } from 'react-chartjs-2';
-import { PieChart, Pie, Cell, Tooltip  } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip as PieChartTooltip, LineChart, 
+  ResponsiveContainer, 
+  Legend, Tooltip, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid  } from 'recharts';
+
 import { useParams, useNavigate } from "react-router-dom";
-import { fetchPortfolio, deletePortfolio, fetchPortfolioRows } from "../services/portfolioService";
+import { fetchPortfolio, deletePortfolio, fetchPortfolioRows, fetchPortfolioChartData } from "../services/portfolioService";
 
 function PortfolioDetails() {
   const [portfolio, setPortfolio] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [portfolioRows, setPortfolioRows] = useState([]);
   const [portfolioPieChartData, setPortfolioPieChartData] = useState([]);
+  const [portfolioLineChartData, setPortfolioLineChartData] = useState([]);
   const [tab, setTab] = useState('portfolio');
 
 
@@ -29,14 +36,24 @@ function PortfolioDetails() {
     const fetchCurrentPortfolioRows = async () => {
       try {
         const json = await fetchPortfolioRows(id);
-        console.log(json['portfolio_rows'])
         setPortfolioRows(json['portfolio_rows'])
       } catch (e) {
         console.log("error retrieving portfolio rows", e);
       }
     }
+
+    const fetchCurrentPortfolioLineChartData = async () => {
+      try {
+        const json = await fetchPortfolioChartData(id);
+        console.log(json['portfolio_chart_data'])
+        setPortfolioLineChartData(json['portfolio_chart_data'])
+      } catch (e) {
+        console.log("error retrieving portfolio chart data", e);
+      }
+    }
     fetchCurrentPortfolio();
     fetchCurrentPortfolioRows();
+    fetchCurrentPortfolioLineChartData();
   }, [id])
 
   useEffect(() => {
@@ -117,47 +134,18 @@ function PortfolioDetails() {
   
   const getRandomColor = () => `#${Math.floor(Math.random() * 16777215).toString(16)}`;
 
-  function renderCustomToolTip({active, label, payload}) {
-    return(
-      <div>
-        <p>hello </p>
-      </div>
-    );
-  }
-
   if (!portfolio) return <h2>Loading...</h2>;
 
   return (
     <>
-      <nav className="navbar navbar-expand-lg navbar-light" style={{ marginBottom: "12px", padding: "0px 24px 12px 24px", borderBottom: "1px solid #eeeeee", backgroundColor: "white" }}>
-        <a className="navbar-brand" href="/">{portfolio.name} Profile</a>
-        <div className="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul className="navbar-nav mr-auto">
-            <li className="nav-item active" style={{ cursor: "pointer" }}>
-              <p className="nav-link" onClick={showPortfolioClick} style={{ marginBottom: "0px" }}>Portfolio</p>
-            </li>
-            <li className="nav-item active" style={{ cursor: "pointer" }}>
-              <p className="nav-link" onClick={showTransactionClick} style={{ marginBottom: "0px" }}>Transaction Log</p>
-            </li>
-            <li className="nav-item active" style={{ cursor: "pointer" }}>
-              <p className="nav-link" onClick={showAllocationsClick} style={{ marginBottom: "0px" }}>Allocations</p>
-            </li>
-            <li className="nav-item active" style={{ cursor: "pointer" }}>
-              <a className="nav-link" href={`/portfolios/${portfolio.id}/transactions/new`} style={{ marginBottom: "0px" }}>Add Transaction</a>
-            </li>
-            <li className="nav-item active" style={{ cursor: "pointer" }}>
-              <a className="nav-link" href={`/portfolios/${portfolio.id}/edit`} style={{ marginBottom: "0px" }}>Edit Portfolio</a>
-            </li>
-            {
-              !transactions.length ? (
-                <li className="nav-item active" style={{ cursor: "pointer" }}>
-                  <p className="nav-link" onClick={deletePortfolioHandler} style={{ marginBottom: "0px" }}>Delete Portfolio</p>
-                </li>
-              ) : (<p></p>)
-            }
-          </ul>
-        </div>
-      </nav>
+      <PortfolioNavBar 
+        portfolio={portfolio}
+        transactions={transactions}
+        showPortfolioClick={showPortfolioClick}
+        showTransactionClick={showTransactionClick}
+        showAllocationsClick={showAllocationsClick}
+        deletePortfolioHandler={deletePortfolioHandler}
+      />
       <div className="container" style={{ margin: "12px" }}>
         {tab === 'portfolio' ? (
           <>
@@ -200,6 +188,27 @@ function PortfolioDetails() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+            <div className="row">
+              <div className="col col-12">
+                <h4>Performance</h4>
+              </div>
+            </div>
+            <div className="row">
+              <div className="col col-12">
+              <ResponsiveContainer width="100%" aspect={3}> 
+                  <LineChart data={portfolioLineChartData} margin={{ right: 300 }}> 
+                      <CartesianGrid /> 
+                      <XAxis dataKey="date_time" 
+                          interval={'preserveStartEnd'} /> 
+                      <YAxis domain={['auto', 'auto']}></YAxis> 
+                      <Legend /> 
+                      <Tooltip /> 
+                      <Line dataKey="market_value"
+                          stroke="black" activeDot={{ r: 8 }} /> 
+                  </LineChart> 
+              </ResponsiveContainer> 
               </div>
             </div>
           </>
@@ -248,20 +257,20 @@ function PortfolioDetails() {
                     <h4>Allocations</h4>
                   </div>
                   <div className="col col-12">
-                    <PieChart width={400} height={400}>
+                    <PieChart width={500} height={500}>
                       <Pie
                         data={portfolioPieChartData}
                         dataKey="value"
                         nameKey="name"
                         cx="50%"
                         cy="50%"
-                        outerRadius={80}
+                        outerRadius={200}
                       >
                         {portfolioPieChartData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={getRandomColor()} />
                         ))}
                       </Pie>
-                      <Tooltip
+                      <PieChartTooltip
                         cursor={false}
                         formatter={(value, name) => [value, name]}
                       />
@@ -275,6 +284,40 @@ function PortfolioDetails() {
       </div>
     </>
   )
+}
+
+function PortfolioNavBar(props) {
+  return (
+    <nav className="navbar navbar-expand-lg navbar-light" style={{ marginBottom: "12px", padding: "0px 24px 12px 24px", borderBottom: "1px solid #eeeeee", backgroundColor: "white" }}>
+      <a className="navbar-brand" href="/">{props.portfolio.name} Profile</a>
+      <div className="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul className="navbar-nav mr-auto">
+          <li className="nav-item active" style={{ cursor: "pointer" }}>
+            <p className="nav-link" onClick={props.showPortfolioClick} style={{ marginBottom: "0px" }}>Portfolio</p>
+          </li>
+          <li className="nav-item active" style={{ cursor: "pointer" }}>
+            <p className="nav-link" onClick={props.showTransactionClick} style={{ marginBottom: "0px" }}>Transaction Log</p>
+          </li>
+          <li className="nav-item active" style={{ cursor: "pointer" }}>
+            <p className="nav-link" onClick={props.showAllocationsClick} style={{ marginBottom: "0px" }}>Allocations</p>
+          </li>
+          <li className="nav-item active" style={{ cursor: "pointer" }}>
+            <a className="nav-link" href={`/portfolios/${props.portfolio.id}/transactions/new`} style={{ marginBottom: "0px" }}>Add Transaction</a>
+          </li>
+          <li className="nav-item active" style={{ cursor: "pointer" }}>
+            <a className="nav-link" href={`/portfolios/${props.portfolio.id}/edit`} style={{ marginBottom: "0px" }}>Edit Portfolio</a>
+          </li>
+          {
+            !props.transactions.length ? (
+              <li className="nav-item active" style={{ cursor: "pointer" }}>
+                <p className="nav-link" onClick={props.deletePortfolioHandler} style={{ marginBottom: "0px" }}>Delete Portfolio</p>
+              </li>
+            ) : (<p></p>)
+          }
+        </ul>
+      </div>
+    </nav>
+)
 }
 
 export default PortfolioDetails;

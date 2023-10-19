@@ -57,6 +57,17 @@ class Api::V1::PortfoliosController < ApplicationController
     render json: { portfolio: @portfolio, portfolio_rows: @portfolio_rows }
   end
 
+  def get_chart_data
+    @portfolio = Portfolio.find(params[:id])
+
+    portfolio_chart_data = @portfolio.get_portfolio_chart_data
+    if portfolio_chart_data.nil?
+      render json: { error: 'Could not retrieve stock data from third party service'}, status: :bad_request
+      return
+    end
+    render json: { portfolio: @portfolio, portfolio_chart_data: portfolio_chart_data }
+  end
+
 
   private
     # Use callbacks to share common setup or constraints between actions.

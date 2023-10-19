@@ -28,6 +28,16 @@ async function fetchPortfolioRows(id) {
   return response.json()
 }
 
+async function fetchPortfolioChartData(id) {
+  const response = await fetch(`${API_URL}/portfolios/${id}/get_chart_data`);
+
+  if (!response.ok) {
+    throw Error(response.statusText);
+  }
+
+  return response.json()
+}
+
 async function createPortfolio(portfolioData) {
   const portfolioDataSerialized = {
     name: portfolioData['name'],
@@ -82,4 +92,4 @@ async function deletePortfolio(id) {
 
 
 
-export { fetchAllPortfolios, fetchPortfolio, fetchPortfolioRows, createPortfolio,  updatePortfolio, deletePortfolio };
+export { fetchAllPortfolios, fetchPortfolio, fetchPortfolioRows, fetchPortfolioChartData, createPortfolio,  updatePortfolio, deletePortfolio };
